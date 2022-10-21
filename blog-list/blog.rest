@@ -1,0 +1,11 @@
+GET http://127.0.0.1:3001/api/blogs
+###
+POST http://127.0.0.1:3001/api/blogs
+content-type: application/json
+
+{
+   "title": "Learn NodeJS",
+  "author": "Sallai Tamás",
+  "url": "http://127.0.0.1:3001/api/blogs",
+  "likes": 1
+}
