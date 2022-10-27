@@ -49,7 +49,6 @@ const mostLikes = (blogs) => {
     if (!prev.likes) {
       return curr
     }
-
     return prev.likes > curr.likes ? prev : curr
   }, 0)
 }

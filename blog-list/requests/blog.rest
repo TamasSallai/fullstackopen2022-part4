@@ -1,0 +1,26 @@
+GET http://127.0.0.1:3001/api/blogs
+###
+
+POST http://127.0.0.1:3001/api/blogs
+content-type: application/json
+
+{
+  "title": "Learn NodeJS",
+  "author": "Sallai Tamás",
+  "url": "http://127.0.0.1:3001/api/blogs",
+  "likes": 1
+}
+###
+
+DELETE http://127.0.0.1:3001/api/blogs/63531eb9054f2af566c3c
+###
+
+PUT http://127.0.0.1:3001/api/blogs/635a68afda13c33cf99c211a
+content-type: application/json
+
+{
+  "title": "new title",
+  "author": "modified author",
+  "url": "http://127.0.0.1:3001/api/blogs",
+  "likes": 9999
+}
