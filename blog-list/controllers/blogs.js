@@ -1,6 +1,7 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 blogRouter.get('/', async (req, res, next) => {
   try {
@@ -17,18 +18,14 @@ blogRouter.get('/', async (req, res, next) => {
 
 blogRouter.post('/', async (req, res, next) => {
   try {
-    const { userId, title, author, url, likes } = req.body
+    const { title, author, url, likes } = req.body
+    const authUser = req.user
 
-    if (!userId) {
-      return res
-        .status(400)
-        .send({ error: 'bad request, no user id was given' })
+    if (!authUser) {
+      return res.status(401).json({ error: 'token missing or invalid' })
     }
 
-    const user = await User.findById(userId)
-    if (!user) {
-      return res.status(401).send({ error: "unauthorized, user doesn't exist" })
-    }
+    const user = await User.findById(authUser.id)
 
     const blog = new Blog({
       title: title,
@@ -37,6 +34,7 @@ blogRouter.post('/', async (req, res, next) => {
       likes: likes,
       user: user._id,
     })
+
     const savedBlog = await blog.save()
     user.blogs = user.blogs.concat(savedBlog._id)
     await user.save()
@@ -49,12 +47,26 @@ blogRouter.post('/', async (req, res, next) => {
 
 blogRouter.delete('/:id', async (req, res, next) => {
   try {
-    const removed = await Blog.findByIdAndRemove(req.params.id)
-    if (removed) {
-      return res.status(204).end()
-    } else {
-      return res.status(404).end()
+    const authUser = req.user
+    if (!authUser) {
+      return res.status(401).json({ error: 'token missing or invalid' })
     }
+
+    const blogToRemove = await Blog.findById(req.params.id)
+    if (!blogToRemove) {
+      return res.status(404).send({ error: "blog doesn't exists" })
+    }
+
+    if (authUser.id !== blogToRemove.user.toString()) {
+      return res
+        .status(401)
+        .send({ error: "unauthorized, blog doesn't belong to user" })
+    }
+
+    await blogToRemove.remove()
+    res
+      .status(200)
+      .send({ message: `blog with id: ${req.params.id} removed successfully` })
   } catch (err) {
     next(err)
   }

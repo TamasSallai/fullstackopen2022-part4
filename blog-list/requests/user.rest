@@ -6,6 +6,24 @@ Content-Type: application/json
 
 {
     "name": "John Doe",
-    "username": "johndie",
-    "password": "supersecretpassword1"
+    "username": "johndoe",
+    "password": "supersecretpassword"
+}
+###
+
+POST http://127.0.0.1:3001/api/login
+Content-Type: application/json
+
+{
+    "username": "johndoe",
+    "password": "supersecretpassword"
+}
+###
+
+POST http://127.0.0.1:3001/api/login
+Content-Type: application/json
+
+{
+    "username": "janedoe",
+    "password": "supersecretpassword2"
 }

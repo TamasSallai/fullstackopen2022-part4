@@ -3,17 +3,18 @@ GET http://127.0.0.1:3001/api/blogs
 
 POST http://127.0.0.1:3001/api/blogs
 content-type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG5kb2UiLCJpZCI6IjYzNjI4ZTgwMjVlMDFiZWVlNDAzYTk0YiIsImlhdCI6MTY2NzQwMzQyM30.LpdN1yHHwzWDgeuzEfvsKpykLw7tWyI4ZBqIeIlafYg
 
 {
-  "userId": "635d8ce5fb34f8bda3b1fd11",
-  "title": "Learn NodeJS",
+  "title": "Learn GraphQL",
   "author": "John Smith",
   "url": "http://127.0.0.1:3001/api/blogs",
   "likes": 1
 }
 ###
 
-DELETE http://127.0.0.1:3001/api/blogs/63531eb9054f2af566c3c
+DELETE http://127.0.0.1:3001/api/blogs/63628f1125e01beee403a959
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImphbmVkb2UiLCJpZCI6IjYzNjI4ZTUzMjVlMDFiZWVlNDAzYTk0OSIsImlhdCI6MTY2NzQwMzU1OH0.eUehzATO8jWjxreg7VK24vn4AinJq0JslxtIZAQH6ig
 ###
 
 PUT http://127.0.0.1:3001/api/blogs/635a68afda13c33cf99c211a
