@@ -64,6 +64,7 @@ blogRouter.delete('/:id', async (req, res, next) => {
     }
 
     await blogToRemove.remove()
+
     res
       .status(200)
       .send({ message: `blog with id: ${req.params.id} removed successfully` })

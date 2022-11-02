@@ -2,31 +2,50 @@ const app = require('../server')
 const supertest = require('supertest')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 const initialBlogs = [
   {
     title: 'Learn NodeJS',
-    author: 'Sallai Tamás',
+    author: 'John Smith',
     url: 'http://127.0.0.1:3001/api/blogs',
     likes: 1,
   },
   {
     title: 'Learn Jest',
-    author: 'Sallai Tamás',
+    author: 'John Smith',
     url: 'http://127.0.0.1:3001/api/blogs',
     likes: 2,
   },
   {
     title: 'Learn GraphQL',
-    author: 'Szabados Evelin',
+    author: 'Jane Doe',
     url: 'http://127.0.0.1:3001/api/blogs',
     likes: 7,
   },
 ]
 
-beforeEach(async () => {
-  await Blog.deleteMany()
+let token = ''
+let userId = ''
 
+beforeEach(async () => {
+  await User.deleteMany()
+  const user = new User({
+    name: 'Test',
+    username: 'Test',
+    passwordHash: await bcrypt.hash('test_password', 10),
+  })
+  const savedUser = await user.save()
+  const userForToken = {
+    username: savedUser.username,
+    id: savedUser._id,
+  }
+  token = jwt.sign(userForToken, process.env.SECRET)
+  userId = savedUser._id
+
+  await Blog.deleteMany()
   const blogObjects = initialBlogs.map((blog) => new Blog(blog))
   const promiseArray = blogObjects.map((blog) => blog.save())
   await Promise.all(promiseArray)
@@ -53,16 +72,18 @@ describe('when database contains data', () => {
 })
 
 describe('addition of a new blog', () => {
-  test('succeeds with valid data', async () => {
+  test('succeeds with authenticated user', async () => {
     const blog = {
       title: 'New blog post from test',
-      author: 'Sallai Tamás',
+      author: 'John Smith',
       url: 'http://127.0.0.1:3001/api/blogs',
       likes: 9999,
     }
+
     await api
       .post('/api/blogs')
       .send(blog)
+      .set('Authorization', `bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -71,7 +92,7 @@ describe('addition of a new blog', () => {
     expect(blogs).toHaveLength(initialBlogs.length + 1)
     expect(blogs[blogs.length - 1]).toMatchObject({
       title: 'New blog post from test',
-      author: 'Sallai Tamás',
+      author: 'John Smith',
       url: 'http://127.0.0.1:3001/api/blogs',
       likes: 9999,
     })
@@ -84,7 +105,10 @@ describe('addition of a new blog', () => {
       url: 'http://127.0.0.1:3001/api/blogs',
     }
 
-    const response = await api.post('/api/blogs').send(blog)
+    const response = await api
+      .post('/api/blogs')
+      .send(blog)
+      .set('Authorization', `bearer ${token}`)
 
     const createdBlog = await Blog.findById(response.body.id)
     expect(createdBlog).toMatchObject({
@@ -106,15 +130,36 @@ describe('addition of a new blog', () => {
       url: 'http://127.0.0.1:3001/api/blogs',
     }
 
-    await api.post('/api/blogs').send(blogWithoutURL).expect(400)
-    await api.post('/api/blogs').send(blogWithoutTitle).expect(400)
+    await api
+      .post('/api/blogs')
+      .send(blogWithoutURL)
+      .set('Authorization', `bearer ${token}`)
+      .expect(400)
+    await api
+      .post('/api/blogs')
+      .send(blogWithoutTitle)
+      .set('Authorization', `bearer ${token}`)
+      .expect(400)
   })
 })
 
 describe('deletion of a blog', () => {
   test('succeeds with a valid id', async () => {
-    const existingId = (await Blog.find({}))[0].id
-    await api.delete(`/api/blogs/${existingId}`).expect(204)
+    const blogtoDelete = new Blog({
+      title: 'blog to delete',
+      author: 'John Smith',
+      url: 'http://127.0.0.1:3001/api/blogs',
+      likes: 0,
+      user: userId,
+    })
+    blogtoDelete.save()
+
+    const response = await api
+      .delete(`/api/blogs/${blogtoDelete._id.toString()}`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(200)
+
+    console.log(response)
   })
 
   test('fails with non existing id', async () => {
@@ -126,11 +171,17 @@ describe('deletion of a blog', () => {
     await blog.save()
     await blog.remove()
 
-    await api.delete(`/api/blogs/${blog.id}`).expect(404)
+    await api
+      .delete(`/api/blogs/${blog.id}`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(404)
   })
 
   test('responds with 400 Bad Request with malformated id', async () => {
-    await api.delete(`/api/blogs/1`).expect(400)
+    await api
+      .delete(`/api/blogs/1`)
+      .set('Authorization', `bearer ${token}`)
+      .expect(400)
   })
 })
 
